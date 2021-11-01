@@ -6,3 +6,7 @@ Logs
 *.sln
 *.userprefs
 *.log
+*.opendb
+.vs/robo_first/v16/Browse.VC.db
+.vs/robo_first/v16/Browse.VC.db-shm
+.vs/robo_first/v16/Browse.VC.db-wal
