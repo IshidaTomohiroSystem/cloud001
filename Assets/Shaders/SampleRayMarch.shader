@@ -31,23 +31,20 @@ Shader "FullScreen/SampleRayMarch"
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
 
-    float Radius = 1;
-    float3 Light;
-    float3 LightColor;
+    static float Radius = 1;
 
     float sphere(float3 pos)
     {
         return length(pos) - Radius;
     }
 
-    float3 getNormal(float3 pos)
+    float3 getNormal(float3 position)
     {
-        float d = 0.001;
-        return normalize(float3(
-            sphere(pos + float3(d, 0, 0)) - sphere(pos + float3(-d, 0, 0)),
-            sphere(pos + float3(0, d, 0)) - sphere(pos + float3(0, -d, 0)),
-            sphere(pos + float3(0, 0, d)) - sphere(pos + float3(0, 0, -d))
-            ));
+        float delta = 0.0001;
+        float fx = sphere(position) - sphere(float3(position.x - delta, position.y, position.z));
+        float fy = sphere(position) - sphere(float3(position.x, position.y - delta, position.z));
+        float fz = sphere(position) - sphere(float3(position.x, position.y, position.z - delta));
+        return normalize(float3(fx, fy, fz));
     }
 
 
@@ -69,35 +66,39 @@ Shader "FullScreen/SampleRayMarch"
         // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         float f = 1 - abs(_FadeValue * 2 - 1);
         //return float4(color.rgb + f, color.a);
+
+        //float2 pos = posInput.positionNDC;
         float3 pos = posInput.positionWS;
-        float3 rayDir = normalize(pos.xyz);// -_WorldSpaceCameraPos);
+
+        float3 rayOrigin = _WorldSpaceCameraPos;
+        float3 rayDir = normalize(float3(pos.xyz));
+        //float3 rayDir = float3(0, 0, -1);// normalize(pos.xyz - _WorldSpaceCameraPos);
 
         int stepNum = 30;
-        Light = float3(-0.5, 0.8, -0.3);
-        LightColor = float3(1, 1, 1);
-        //Radius = 1;
+        float3 lightDir = normalize(float3(-0.5, 0.8, -0.5));
+        float3 lightColor = float3(1, 1, 1);
+        float3 col = (0.0).xxx;
 
         for (int i = 0; i < stepNum; i++)
         {
-            float marchingDist = sphere(pos);
+            float marchingDist = sphere(rayOrigin);
             // 0.0011以下になったら、ピクセルを白で塗って処理終了
             if (marchingDist < 0.001)
             {
                 //float3 lightDir = normalize(Light.xyz);
-                //float3 normal = getNormal(pos);
-                //float3 lightColor = LightColor;
-                //
-                //float4 col = float4(lightColor * max(dot(normal, lightDir), 0), 1.0);
-                //col.rgb += float3(0.2f, 0.2f, 0.2f);//環境光
-                //return col;
-                return 1;
+                float3 normal = getNormal(rayOrigin);
+                float diff = dot(normal, lightDir);
+                col = diff;
+                col.rgb += float3(0.2f, 0.2f, 0.2f);//環境光
+                break;
+                //return 1;
             }
             //pos.xyz += marchingDist * rayDir.xyz;
-            pos.xyz += rayDir.xyz;
+            rayOrigin += rayDir.xyz * marchingDist;
         }
         //return float4(color.rgb + f, color.a);
-       // return float4(rayDir,1
-        return 0;
+        //return float4(rayDir,1);
+        return float4(col, 1.0);
     }
 
     ENDHLSL
