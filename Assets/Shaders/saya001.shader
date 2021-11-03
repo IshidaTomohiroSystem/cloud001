@@ -270,7 +270,7 @@ Shader "FullScreen/saya001"
         float2 p = (2. * varyings.positionCS.xy - _ScreenSize.xy) / min(_ScreenSize.x, _ScreenSize.y);
         //		float2 p = 2.*uv - 1.;
         //float2 p = (fragCoord.xy * 2.0 - iResolution.xy) / min(iResolution.x, iResolution.y);
-       
+        // 
         // camera and ray
         if (normalizedGlobalTime < 0.7) {
             cPos = float3(0.0, 0.6 + 0.4 * cos(_Time.y), 3.0 * _Time.y);
