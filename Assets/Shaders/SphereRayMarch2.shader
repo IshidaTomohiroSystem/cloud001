@@ -100,13 +100,9 @@ Shader "FullScreen/SphereRayMarch2"
                 //break;
                 return float4(col, 1.0);
             }
-            //pos.xyz += marchingDist * rayDir.xyz;
             rayOrigin += rayDir.xyz * marchingDist;
         }
-        //return float4(color.rgb + f, color.a);
-        //return float4(rayDir,1);
-        //return float4(col, 1.0);
-        //return float4(color.rgb + f, 0.0) + float4(col, 1.0);
+
         return float4(color.rgb + f, color.a);
     }
 
