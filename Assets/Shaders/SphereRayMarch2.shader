@@ -30,28 +30,64 @@ Shader "FullScreen/SphereRayMarch2"
 
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
+    struct ObjectData {
+        float3 position;
+        float3 color;
+    };
 
+    struct MinDistPosition {
+        float dist;
+        ObjectData data;
+    };
+
+    static ObjectData sphereOne;
+    static ObjectData sphereTwo;
 
     float Sphere(float3 position, float radius)
     {
         return length(position) - radius;
     }
 
-    float ShortestDistance(float3 position)
+    MinDistPosition ShortestDistance(float3 position)
     {
         float dist1 = Sphere(position, 1);
-        float dist2 = Sphere(position - float3(2.0, 2.0, 0.0), 1);
+        float dist2 = Sphere(position - sphereTwo.position, 1);
 
         float minDist = min(dist1, dist2);
-        return minDist;
+
+        MinDistPosition minDistPosition;
+        minDistPosition.dist = minDist;
+
+        if (min(dist1, dist2) == dist1)
+        {
+            minDistPosition.data = sphereOne;
+        }
+        else if(min(dist1, dist2) == dist2)
+        {
+            minDistPosition.data = sphereTwo;
+        }
+
+        return minDistPosition;
     }
 
     float3 GetNormal(float3 position)
     {
         float2 e = float2(1.0, -1.0) * 0.001;
+
         return normalize(
-            e.xyy * ShortestDistance(position + e.xyy) + e.yyx * ShortestDistance(position + e.yyx) +
-            e.yxy * ShortestDistance(position + e.yxy) + e.xxx * ShortestDistance(position + e.xxx));
+            e.xyy * ShortestDistance(position + e.xyy).dist + e.yyx * ShortestDistance(position + e.yyx).dist +
+            e.yxy * ShortestDistance(position + e.yxy).dist + e.xxx * ShortestDistance(position + e.xxx).dist);
+    }
+
+    float3 GetColor(float3 rayOrigin, float3 lightDir, float3 lightColor, ObjectData minObjData)
+    {
+        float3 color;
+        float3 normal = GetNormal(rayOrigin);
+        float diffuse = clamp(dot(lightDir, normal), 0.1, 1.0);
+        //float specular = pow(clamp(dot(reflect(lightDir, normal), rayOrigin - minObjData.position), 0.0, 1.0), 6.0);
+
+        color = minObjData.color * lightColor * diffuse;// +(1.0).xxx * specular;
+        return color;
     }
 
     
@@ -85,19 +121,23 @@ Shader "FullScreen/SphereRayMarch2"
         float3 lightColor = float3(1, 1, 1);
         float3 col = (0.0).xxx;
 
+
+        sphereOne.position = float3(0.0, 0.0, 0.0);
+        sphereOne.color = float3(1.0, 1.0, 1.0);
+
+        sphereTwo.position = float3(2.0, 2.0, 0.0);
+        sphereTwo.color = float3(1.0, 1.0, 0.0);
+
+
+
         for (int i = 0; i < stepNum; i++)
         {
-            float marchingDist = ShortestDistance(rayOrigin);
+            MinDistPosition minDistPosition = ShortestDistance(rayOrigin);
+            float marchingDist = minDistPosition.dist;
             // 0.0011以下になったら、ピクセルを白で塗って処理終了
             if (marchingDist < 0.001)
             {
-                //float3 lightDir = normalize(Light.xyz);
-                float3 normal = GetNormal(rayOrigin);
-                float diff = dot(normal, lightDir);
-                col = diff;
-                col.rgb += float3(0.2f, 0.2f, 0.2f);//環境光
-                float specular = pow(clamp(dot(reflect(lightDir, normal), rayOrigin), 0.0, 1.0), 6.0);
-                //break;
+                col = GetColor(rayOrigin, lightDir, lightColor, minDistPosition.data);
                 return float4(col, 1.0);
             }
             rayOrigin += rayDir.xyz * marchingDist;
