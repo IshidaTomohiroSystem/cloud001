@@ -1,4 +1,4 @@
-Shader "FullScreen/CubeRayMarch"
+Shader "FullScreen/SphereRayMarch2"
 {
     HLSLINCLUDE
 
@@ -31,6 +31,31 @@ Shader "FullScreen/CubeRayMarch"
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
 
+
+    float Sphere(float3 position, float radius)
+    {
+        return length(position) - radius;
+    }
+
+    float ShortestDistance(float3 position)
+    {
+        float dist1 = Sphere(position, 1);
+        float dist2 = Sphere(position - float3(2.0, 2.0, 0.0), 1);
+
+        float minDist = min(dist1, dist2);
+        return minDist;
+    }
+
+    float3 GetNormal(float3 position)
+    {
+        float2 e = float2(1.0, -1.0) * 0.001;
+        return normalize(
+            e.xyy * ShortestDistance(position + e.xyy) + e.yyx * ShortestDistance(position + e.yyx) +
+            e.yxy * ShortestDistance(position + e.yxy) + e.xxx * ShortestDistance(position + e.xxx));
+    }
+
+    
+
     float4 FullScreenPass(Varyings varyings) : SV_Target
     {
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(varyings);
@@ -47,12 +72,47 @@ Shader "FullScreen/CubeRayMarch"
 
         // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         float f = 1 - abs(_FadeValue * 2 - 1);
+        //return float4(color.rgb + f, color.a);
+
+        float3 pos = posInput.positionWS;
+
+        float3 rayOrigin = _WorldSpaceCameraPos;
+        float3 rayDir = normalize(float3(pos.xyz));
+
+
+        int stepNum = 30;
+        float3 lightDir = normalize(float3(0.5, 0.8, -0.5));
+        float3 lightColor = float3(1, 1, 1);
+        float3 col = (0.0).xxx;
+
+        for (int i = 0; i < stepNum; i++)
+        {
+            float marchingDist = ShortestDistance(rayOrigin);
+            // 0.0011以下になったら、ピクセルを白で塗って処理終了
+            if (marchingDist < 0.001)
+            {
+                //float3 lightDir = normalize(Light.xyz);
+                float3 normal = GetNormal(rayOrigin);
+                float diff = dot(normal, lightDir);
+                col = diff;
+                col.rgb += float3(0.2f, 0.2f, 0.2f);//環境光
+                float specular = pow(clamp(dot(reflect(lightDir, normal), rayOrigin), 0.0, 1.0), 6.0);
+                //break;
+                return float4(col, 1.0);
+            }
+            //pos.xyz += marchingDist * rayDir.xyz;
+            rayOrigin += rayDir.xyz * marchingDist;
+        }
+        //return float4(color.rgb + f, color.a);
+        //return float4(rayDir,1);
+        //return float4(col, 1.0);
+        //return float4(color.rgb + f, 0.0) + float4(col, 1.0);
         return float4(color.rgb + f, color.a);
     }
 
-    ENDHLSL
+        ENDHLSL
 
-    SubShader
+        SubShader
     {
         Pass
         {
