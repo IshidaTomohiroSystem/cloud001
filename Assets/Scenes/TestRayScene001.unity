@@ -170,7 +170,7 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 47b8c27df3e327042b527ebd59315d10, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: 1f9c034be43adf9469a8387a65245b77, type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -300,7 +300,7 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 47b8c27df3e327042b527ebd59315d10, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: be96a007cf9e96c45b6253790e930cfe, type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -581,7 +581,7 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 47b8c27df3e327042b527ebd59315d10, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: fddb7cd086f75b04bb5c7ac5384c1b7a, type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -646,7 +646,7 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 47b8c27df3e327042b527ebd59315d10, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: 8547a313fe3a5e24a904adb2fd2575f7, type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -753,7 +753,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1710918836}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0.2}
+  m_LocalPosition: {x: 0.6, y: 0, z: 4.39}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
