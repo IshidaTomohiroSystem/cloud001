@@ -182,6 +182,10 @@ Shader "FullScreen/saya001"
         float3 p = origin;
         int count = 0;
         Intersect nearest;
+        nearest.position = (0.0).xxx;
+        nearest.normal = (0.0).xxx;
+        nearest.isHit = false;
+        nearest.material = 0;
         nearest.color = (0.0).xxx;
         nearest.distance = 0.0;
 

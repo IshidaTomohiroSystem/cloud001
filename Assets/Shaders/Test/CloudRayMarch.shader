@@ -1,4 +1,4 @@
-Shader "FullScreen/ZBufTestMarc"
+Shader "FullScreen/CloudRayMarch"
 {
     HLSLINCLUDE
 
@@ -31,36 +31,6 @@ Shader "FullScreen/ZBufTestMarc"
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
 
-    float DistSphere(float3 position, float radius)
-    {
-        return length(position) - radius;
-    }
-
-    float ShortestDistance(float3 position)
-    {
-        return DistSphere(position, 0.5);
-    }
-
-    float3 GetNormal(float3 position)
-    {
-        float2 e = float2(1.0, -1.0) * 0.001;
-
-        return normalize(
-            e.xyy * ShortestDistance(position + e.xyy) + e.yyx * ShortestDistance(position + e.yyx) +
-            e.yxy * ShortestDistance(position + e.yxy) + e.xxx * ShortestDistance(position + e.xxx));
-    }
-
-    float3 GetColor(float3 rayOrigin, float3 lightDir, float3 lightColor)
-    {
-        float3 color;
-        float3 normal = GetNormal(rayOrigin);
-        float diffuse = clamp(dot(lightDir, normal), 0.1, 1.0);
-        //float specular = pow(clamp(dot(reflect(lightDir, normal), rayOrigin - minObjData.position), 0.0, 1.0), 6.0);
-
-        color = lightColor * diffuse;// +(1.0).xxx * specular;
-        return color;
-    }
-
     float4 FullScreenPass(Varyings varyings) : SV_Target
     {
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(varyings);
@@ -77,37 +47,12 @@ Shader "FullScreen/ZBufTestMarc"
 
         // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         float f = 1 - abs(_FadeValue * 2 - 1);
-
-        float3 rayOrigin = _WorldSpaceCameraPos;
-        float3 rayDir = normalize(posInput.positionWS);
-        float3 pos = posInput.positionWS;
-
-
-        for (int i = 0; i < 30; i++)
-        {
-            float dist = ShortestDistance(rayOrigin);
-            if (dist < 0.001)
-            {
-                float4 rayWS = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -_WorldSpaceCameraPos.z));
-                float rayZBuf = ComputeNormalizedDeviceCoordinatesWithZ(rayWS, UNITY_MATRIX_VP).z;
-
-                if ((rayZBuf) > (posInput.deviceDepth))
-                {
-                    float3 col = GetColor(rayOrigin, float3(1, 1, 0), float3(1, 1, 1));
-                    return float4(col, 1.0);
-                }
-
-            }
-            rayOrigin += rayDir.xyz * dist;
-        }
-
-        //return float4(-1 + 1000 / posInput.linearDepth, 0, 0, 1);
         return float4(color.rgb + f, color.a);
     }
 
-        ENDHLSL
+    ENDHLSL
 
-        SubShader
+    SubShader
     {
         Pass
         {
