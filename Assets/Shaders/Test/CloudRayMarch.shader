@@ -30,17 +30,17 @@ Shader "FullScreen/CloudRayMarch"
 
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
-    #define USE_LIGHT 0
 
     static float3x3 matOffset = float3x3(
-        float3( 0,    0.8,   0.6),
-        float3(-0.8,  0.36, -0.48),
-        float3(-0.6, -0.48,  0.64)
+        float3(0, 0.8, 0.16),
+        float3(-0.8, 0.36, -0.418),
+        float3(-0.6, -0.48, 0.164)
     );
 
     struct CloudData {
         float3 position;
         float radius;
+        float4 color;
     };
 
 
@@ -57,10 +57,10 @@ Shader "FullScreen/CloudRayMarch"
         f = f * f * (3.0 - 2.0 * f);
         float n = p.x + p.y * 57.0 + 113.0 * p.z;
 
-        float res = lerp(lerp(lerp(Hash(n +   0.0), Hash(n +   1.0), f.x),
-                              lerp(Hash(n +  57.0), Hash(n +  58.0), f.x), f.y),
-                         lerp(lerp(Hash(n + 113.0), Hash(n + 114.0), f.x),
-                              lerp(Hash(n + 170.0), Hash(n + 171.0), f.x), f.y), f.z);
+        float res = lerp(lerp(lerp(Hash(n + 0.0), Hash(n + 1.0), f.x),
+            lerp(Hash(n + 57.0), Hash(n + 58.0), f.x), f.y),
+            lerp(lerp(Hash(n + 113.0), Hash(n + 114.0), f.x),
+                lerp(Hash(n + 170.0), Hash(n + 171.0), f.x), f.y), f.z);
         return res;
     }
 
@@ -68,15 +68,119 @@ Shader "FullScreen/CloudRayMarch"
     float Fbm(float3 p)
     {
         float f;
-        f =  0.5000 * Noise(p); p = mul(matOffset, p) * 2.02;
+        f = 0.5000 * Noise(p); p = mul(matOffset, p) * 2.02;
         f += 0.2500 * Noise(p); p = mul(matOffset, p) * 2.03;
         f += 0.1250 * Noise(p);
         return f;
     }
 
-    float CloudDist(in float3 rayOrigin, float3 cloudPostion, float cloudRadius)
+    float CloudDist(in float3 rayOrigin, in CloudData cloudData)
     {
-        return 0.1 - length(rayOrigin - cloudPostion) * (0.25 * (1 / cloudRadius)) + Fbm(rayOrigin * 0.3);
+        return 0.1 - length(rayOrigin - cloudData.position) * (0.25 * (1 / cloudData.radius)) + Fbm(rayOrigin * 0.3);
+    }
+
+    float4 GetCloudColor(in CloudData cloudData, in float densSapmle, in float transmittance, in float posDepth)
+    {
+        float4 densityColor = (0.0).xxxx;
+        float4 rayWSLong = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -(_WorldSpaceCameraPos.z + cloudData.radius) + cloudData.position.z));
+        float3 rayZPosLong = ComputeNormalizedDeviceCoordinatesWithZ(rayWSLong.xyz, UNITY_MATRIX_VP);
+        float rayZBufLong = rayZPosLong.z;
+
+        float4 rayWSShort = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -(_WorldSpaceCameraPos.z - cloudData.radius) + cloudData.position.z));
+        float3 rayZPosShort = ComputeNormalizedDeviceCoordinatesWithZ(rayWSShort.xyz, UNITY_MATRIX_VP);
+        float rayZBufShort = rayZPosShort.z;
+
+        float opaity = 50.0;
+        float k = opaity * densSapmle * transmittance;
+        float4 color1 = cloudData.color * k;
+
+        if (rayZBufShort < posDepth && posDepth < rayZBufLong)
+        {
+            densityColor += color1;
+        }
+        else if (posDepth < rayZBufLong)
+        {
+            densityColor += color1 * 2;
+        }
+        return densityColor;
+    }
+
+    float UpdateTransmittance(in float oldTransmittance, in float densSapmle, in float absorption)
+    {
+        float transmittance = oldTransmittance * (1.0 - (densSapmle * absorption));
+        return transmittance;
+    }
+
+    float4 SetCloud(in float3 rayOrigin, in CloudData cloudData, in float oldTransmittance, in int sampleCount, in float absorption, in float posDepth, out float retTransmittance, out bool retEndFlag)
+    {
+        float4 color = (0.0).xxxx;
+        float density = CloudDist(rayOrigin, cloudData);
+        retTransmittance = oldTransmittance;
+        retEndFlag = false;
+
+
+        if (0.0 < density)
+        {
+            float densSapmle = density / float(sampleCount);
+            float transmittance = UpdateTransmittance(oldTransmittance, densSapmle, absorption);
+
+            if (transmittance <= 0.01)
+            {
+                retEndFlag = true;
+            }
+            else
+            {
+                color = GetCloudColor(cloudData, densSapmle, transmittance, posDepth);
+
+                retTransmittance = transmittance;
+            }
+        }
+        return color;
+    }
+
+    float4 SetSceneCloudAll(float3 rayOrigin, float3 posWS, float3 rayDir, float posDepth)
+    {
+        float4 color = (0.0).xxxx;
+        // cloud settings
+        int sampleCount = 128;
+
+        // ray marching step settings
+        float zMax = 100.0;
+        float zStep = zMax / float(sampleCount);
+        float transmittance = 1.0;
+
+        float absorption = 20.0 * 2;
+
+
+        CloudData cloudData;
+        cloudData.position = float3(0, 0, 5);
+        cloudData.radius = 5;
+        cloudData.color = float4(1, 0, 1, 1);
+
+        CloudData cloudDataNew;
+        cloudDataNew.position = float3(10, 0, 5);
+        cloudDataNew.radius = 1.5;
+        cloudDataNew.color = float4(1, 1, 0, 1);
+
+        bool endFlag = false;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float oldTransmittance = transmittance;
+
+
+            if (endFlag == true)
+            {
+                break;
+            }
+
+            color += SetCloud(rayOrigin, cloudData, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
+            color += SetCloud(rayOrigin, cloudDataNew, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
+
+            rayOrigin += rayDir * zStep;
+        }
+
+        return color;
     }
 
     float4 FullScreenPass(Varyings varyings) : SV_Target
@@ -100,75 +204,13 @@ Shader "FullScreen/CloudRayMarch"
         float3 pos = posInput.positionWS;
         float3 rayDir = normalize(pos);
 
-        // cloud settings
-        int sampleCount = 128;
-        int sampleLightCount = 6;
-        float eps = 0.001;
-
-        // ray marching step settings
-        float zMax = 100.0;
-        float zStep = zMax / float(sampleCount);
-
-        float zMaxL = 20.0;
-        float zStepL = zMaxL / float(sampleLightCount);
-
-        float transmittance = 1.0;
-
-        float absorption = 50.0 * 2;
-
-        float3 lightDir = float3(1.0, 0, 0);
-        float4 lightColor = float4(1.0, 0.7, 0.9, 1.0);
-
-        float4 cloudColor = (1.0).xxxx;
-        float4 resultColor = (0.0).xxxx;
-
-        CloudData cloudData;
-        cloudData.position = float3(0, 0, 10);
-        cloudData.radius = 2.5;
-
-        float4 rayWSLong = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -(_WorldSpaceCameraPos.z + cloudData.radius)));
-        float3 rayZPosLong = ComputeNormalizedDeviceCoordinatesWithZ(rayWSLong.xyz, UNITY_MATRIX_VP);
-        float rayZBufLong = rayZPosLong.z;
-
-        float4 rayWSShort = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -(_WorldSpaceCameraPos.z - cloudData.radius)));
-        float3 rayZPosShort = ComputeNormalizedDeviceCoordinatesWithZ(rayWSShort.xyz, UNITY_MATRIX_VP);
-        float rayZBufShort = rayZPosShort.z;
-
-        for (int i = 0; i < sampleCount; i++)
-        {
-            float density = CloudDist(rayOrigin, cloudData.position, cloudData.radius);
-            if (0.0 < density)
-            {
-                float temp = density / float(sampleCount);
-                transmittance *= 1.0 - (temp * absorption);
-
-                if (transmittance <= 0.01)
-                {
-                    break;
-                }
-                
-                float opaity = 50.0;
-                float k = opaity * temp * transmittance;
-                float4 color1 = cloudColor * k;
-
-                if (rayZBufShort < posInput.deviceDepth && posInput.deviceDepth < rayZBufLong)
-                {
-                    color += color1;
-                }
-                else if(posInput.deviceDepth < rayZBufLong)
-                {
-                    color += color1 * 2;
-                }
-            }
-            rayOrigin += rayDir * zStep;
-        }
-        //return float4(color.rgb + f, color.a);
+        color = SetSceneCloudAll(rayOrigin, pos, rayDir, posInput.deviceDepth);
         return color;
     }
 
-    ENDHLSL
+        ENDHLSL
 
-    SubShader
+        SubShader
     {
         Pass
         {
