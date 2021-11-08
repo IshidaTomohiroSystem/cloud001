@@ -8,6 +8,8 @@ Shader "FullScreen/CloudRayMarch"
     #pragma only_renderers d3d11 playstation xboxone xboxseries vulkan metal switch
 
     #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/RenderPass/CustomPass/CustomPassCommon.hlsl"
+    
+    TEXTURE2D_X(_OutlineBuffer);
 
     // The PositionInputs struct allow you to retrieve a lot of useful information for your fullScreenShader:
     // struct PositionInputs
@@ -41,6 +43,7 @@ Shader "FullScreen/CloudRayMarch"
         float3 position;
         float radius;
         float4 color;
+        float transmittance;
     };
 
 
@@ -70,7 +73,7 @@ Shader "FullScreen/CloudRayMarch"
         float f;
         f = 0.5000 * Noise(p); p = mul(matOffset, p) * 2.02;
         f += 0.2500 * Noise(p); p = mul(matOffset, p) * 2.03;
-        f += 0.1250 * Noise(p);
+        f += 0.250 * Noise(p);
         return f;
     }
 
@@ -102,6 +105,10 @@ Shader "FullScreen/CloudRayMarch"
         {
             densityColor += color1 * 2;
         }
+        else
+        {
+            densityColor += color1;
+        }
         return densityColor;
     }
 
@@ -111,24 +118,19 @@ Shader "FullScreen/CloudRayMarch"
         return transmittance;
     }
 
-    float4 SetCloud(in float3 rayOrigin, in CloudData cloudData, in float oldTransmittance, in int sampleCount, in float absorption, in float posDepth, out float retTransmittance, out bool retEndFlag)
+    float4 SetCloud(in float3 rayOrigin, in CloudData cloudData, in int sampleCount, in float absorption, in float posDepth, out float retTransmittance)
     {
         float4 color = (0.0).xxxx;
         float density = CloudDist(rayOrigin, cloudData);
-        retTransmittance = oldTransmittance;
-        retEndFlag = false;
+        retTransmittance = cloudData.transmittance;
 
 
         if (0.0 < density)
         {
             float densSapmle = density / float(sampleCount);
-            float transmittance = UpdateTransmittance(oldTransmittance, densSapmle, absorption);
+            float transmittance = UpdateTransmittance(cloudData.transmittance, densSapmle, absorption);
 
-            if (transmittance <= 0.01)
-            {
-                retEndFlag = true;
-            }
-            else
+            if (transmittance > 0.01)
             {
                 color = GetCloudColor(cloudData, densSapmle, transmittance, posDepth);
 
@@ -138,7 +140,7 @@ Shader "FullScreen/CloudRayMarch"
         return color;
     }
 
-    float4 SetSceneCloudAll(float3 rayOrigin, float3 posWS, float3 rayDir, float posDepth)
+    float4 SetSceneCloudAll(in float3 resRayOrigin, in  float3 posWS, in float3 rayDir, in float posDepth)
     {
         float4 color = (0.0).xxxx;
         // cloud settings
@@ -147,38 +149,64 @@ Shader "FullScreen/CloudRayMarch"
         // ray marching step settings
         float zMax = 100.0;
         float zStep = zMax / float(sampleCount);
-        float transmittance = 1.0;
-
-        float absorption = 20.0 * 2;
+        float absorption = 50.0 * 2;
 
 
         CloudData cloudData;
         cloudData.position = float3(0, 0, 5);
         cloudData.radius = 5;
-        cloudData.color = float4(1, 0, 1, 1);
+        cloudData.color = float4(1, 1, 1, 1);
+        cloudData.transmittance = 1.0;
 
         CloudData cloudDataNew;
-        cloudDataNew.position = float3(10, 0, 5);
-        cloudDataNew.radius = 1.5;
-        cloudDataNew.color = float4(1, 1, 0, 1);
+        cloudDataNew.position = float3(-10, 0, 5);
+        cloudDataNew.radius = 2.5;
+        cloudDataNew.color = float4(1, 1, 1, 1);
+        cloudDataNew.transmittance = 1.0;
 
-        bool endFlag = false;
+        float3 rayOrigin = resRayOrigin;
 
         for (int i = 0; i < sampleCount; i++)
         {
-            float oldTransmittance = transmittance;
+            float oldTransmittance = cloudData.transmittance;
+            
 
-
-            if (endFlag == true)
+            if (cloudDataNew.transmittance >= 0.01)
             {
-                break;
+                color += SetCloud(rayOrigin, cloudData, sampleCount, absorption, posDepth, cloudData.transmittance);
             }
 
-            color += SetCloud(rayOrigin, cloudData, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
-            color += SetCloud(rayOrigin, cloudDataNew, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
+            float oldTransmittanceNew = cloudDataNew.transmittance;
+            if (cloudDataNew.transmittance >= 0.01)
+            {
+                color += SetCloud(rayOrigin, cloudDataNew, sampleCount, absorption, posDepth, cloudDataNew.transmittance);
+            }
+
+            //color += SetCloud(rayOrigin, cloudData, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
+            
 
             rayOrigin += rayDir * zStep;
         }
+
+        //rayOrigin = resRayOrigin;
+        //transmittance = 1.0;
+        //endFlag = false;
+        //
+        //for (int j = 0; j < sampleCount; j++)
+        //{
+        //    float oldTransmittance = transmittance;
+        //
+        //
+        //    if (endFlag == true)
+        //    {
+        //        break;
+        //    }
+        //
+        //    color += SetCloud(rayOrigin, cloudData, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
+        //    //color += SetCloud(rayOrigin, cloudDataNew, oldTransmittance, sampleCount, absorption, posDepth, transmittance, endFlag);
+        //
+        //    rayOrigin += rayDir * zStep;
+        //}
 
         return color;
     }
