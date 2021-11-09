@@ -225,13 +225,13 @@ Shader "FullScreen/CloudRayMarch"
 
         // Add your custom pass code here
 
-        // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         float f = 1 - abs(_FadeValue * 2 - 1);
 
         float3 rayOrigin = _WorldSpaceCameraPos;
         float3 pos = posInput.positionWS;
         float3 rayDir = normalize(pos);
 
+        // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         color = SetSceneCloudAll(rayOrigin, pos, rayDir, posInput.deviceDepth);
         return color;
     }

@@ -1,4 +1,4 @@
-Shader "FullScreen/ZBufTestMarc"
+Shader "FullScreen/EllipseCloud"
 {
     HLSLINCLUDE
 
@@ -31,34 +31,40 @@ Shader "FullScreen/ZBufTestMarc"
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
 
-    float DistSphere(float3 position, float radius)
+    static float3x3 matOffset = float3x3(
+        float3(0, 0.8, 0.16),
+        float3(-0.8, 0.36, -0.418),
+        float3(-0.6, -0.48, 0.164)
+    );
+
+    float Hash(float number)
     {
-        return length(position) - radius;
+        return frac(sin(number) * 43758.5453);
     }
 
-    float ShortestDistance(float3 position)
+    float Noise(in float3 number)
     {
-        return DistSphere(position, 0.5);
+        float3 p = floor(number);
+        float3 f = frac(number);
+
+        f = f * f * (3.0 - 2.0 * f);
+        float n = p.x + p.y * 57.0 + 113.0 * p.z;
+
+        float res = lerp(lerp(lerp(Hash(n + 0.0), Hash(n + 1.0), f.x),
+            lerp(Hash(n + 57.0), Hash(n + 58.0), f.x), f.y),
+            lerp(lerp(Hash(n + 113.0), Hash(n + 114.0), f.x),
+                lerp(Hash(n + 170.0), Hash(n + 171.0), f.x), f.y), f.z);
+        return res;
     }
 
-    float3 GetNormal(float3 position)
+    // Fractal Brownian motion
+    float Fbm(float3 p)
     {
-        float2 e = float2(1.0, -1.0) * 0.001;
-
-        return normalize(
-            e.xyy * ShortestDistance(position + e.xyy) + e.yyx * ShortestDistance(position + e.yyx) +
-            e.yxy * ShortestDistance(position + e.yxy) + e.xxx * ShortestDistance(position + e.xxx));
-    }
-
-    float3 GetColor(float3 rayOrigin, float3 lightDir, float3 lightColor)
-    {
-        float3 color;
-        float3 normal = GetNormal(rayOrigin);
-        float diffuse = clamp(dot(lightDir, normal), 0.1, 1.0);
-        //float specular = pow(clamp(dot(reflect(lightDir, normal), rayOrigin - minObjData.position), 0.0, 1.0), 6.0);
-
-        color = lightColor * diffuse;// +(1.0).xxx * specular;
-        return color;
+        float f;
+        f = 0.5000 * Noise(p); p = mul(matOffset, p) * 2.02;
+        f += 0.2500 * Noise(p); p = mul(matOffset, p) * 2.03;
+        f += 0.250 * Noise(p);
+        return f;
     }
 
     float4 FullScreenPass(Varyings varyings) : SV_Target
@@ -74,40 +80,18 @@ Shader "FullScreen/ZBufTestMarc"
             color = float4(CustomPassLoadCameraColor(varyings.positionCS.xy, 0), 1);
 
         // Add your custom pass code here
-
-        float f = 1 - abs(_FadeValue * 2 - 1);
-
         float3 rayOrigin = _WorldSpaceCameraPos;
         float3 rayDir = normalize(posInput.positionWS);
         float3 pos = posInput.positionWS;
 
         // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
-        for (int i = 0; i < 30; i++)
-        {
-            float dist = ShortestDistance(rayOrigin);
-            if (dist < 0.001)
-            {
-                float4 rayWS = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -_WorldSpaceCameraPos.z));
-                float3 rayZPos = ComputeNormalizedDeviceCoordinatesWithZ(rayWS.xyz, UNITY_MATRIX_VP);
-                float rayZBuf = rayZPos.z;
-
-                if ((rayZBuf) > (posInput.deviceDepth))
-                {
-                    float3 col = GetColor(rayOrigin, float3(1, 1, 0), float3(1, 1, 1));
-                    return float4(col, 1.0);
-                }
-
-            }
-            rayOrigin += rayDir.xyz * dist;
-        }
-
-        //return float4(-1 + 1000 / posInput.linearDepth, 0, 0, 1);
+        float f = 1 - abs(_FadeValue * 2 - 1);
         return float4(color.rgb + f, color.a);
     }
 
-        ENDHLSL
+    ENDHLSL
 
-        SubShader
+    SubShader
     {
         Pass
         {
