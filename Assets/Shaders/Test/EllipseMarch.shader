@@ -31,12 +31,8 @@ Shader "FullScreen/EllipseMarch"
     // There are also a lot of utility function you can use inside Common.hlsl and Color.hlsl,
     // you can check them out in the source code of the core SRP package.
         
-    float distSphere(float3 rayOrigin, float radius)
-    {
-        return length(rayOrigin) - radius;
-    }
 
-    float distEllipse(float3 rayOrigin, float3 ellipsePoint)
+    float DistEllipse(float3 rayOrigin, float3 ellipsePoint)
     {
         float p =   (rayOrigin.x * rayOrigin.x) / (ellipsePoint.x * ellipsePoint.x) +
                     (rayOrigin.y * rayOrigin.y) / (ellipsePoint.y * ellipsePoint.y) +
@@ -64,7 +60,7 @@ Shader "FullScreen/EllipseMarch"
 
         for (int i = 0; i < 30; i++)
         {
-            float dist = distEllipse(rayOrigin, ellipsePoint);
+            float dist = DistEllipse(rayOrigin, ellipsePoint);
             if (dist <= 0)
             {
                 return 1;

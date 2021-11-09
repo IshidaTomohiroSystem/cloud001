@@ -67,6 +67,19 @@ Shader "FullScreen/EllipseCloud"
         return f;
     }
 
+    float DistEllipse(float3 rayOrigin, float3 ellipsePoint)
+    {
+        float p = (rayOrigin.x * rayOrigin.x) / (ellipsePoint.x * ellipsePoint.x) +
+            (rayOrigin.y * rayOrigin.y) / (ellipsePoint.y * ellipsePoint.y) +
+            (rayOrigin.z * rayOrigin.z) / (ellipsePoint.z * ellipsePoint.z) - 1;
+        return p;
+    }
+
+    float EllipseCloudDens(float3 rayOrigin, float3 ellipsePoint)
+    {
+        return 0.1 - DistEllipse(rayOrigin, ellipsePoint) * 0.5 + Fbm(rayOrigin * 0.3);
+    }
+
     float4 FullScreenPass(Varyings varyings) : SV_Target
     {
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(varyings);
@@ -83,6 +96,37 @@ Shader "FullScreen/EllipseCloud"
         float3 rayOrigin = _WorldSpaceCameraPos;
         float3 rayDir = normalize(posInput.positionWS);
         float3 pos = posInput.positionWS;
+        
+        int sampleCount = 128;
+
+        // ray marching step settings
+        float zMax = 100.0;
+
+        float zStep = zMax / float(sampleCount);
+        float transmittance = 1.0;
+        float absorption = 50.0;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float dens = EllipseCloudDens(rayOrigin, float3(4, 2, 2));
+
+            if (dens > 0.0)
+            {
+                transmittance *= (1.0 - ((dens / float(sampleCount)) * absorption));
+                if (transmittance <= 0.01)
+                {
+                    break;
+                }
+
+                float opaity = 20.0;
+                float k = opaity * (dens / float(sampleCount)) * transmittance;
+                float4 color1 = (1.0).xxxx * k;
+
+                color += color1;
+            }
+
+            rayOrigin += rayDir * zStep;
+        }
 
         // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         float f = 1 - abs(_FadeValue * 2 - 1);
