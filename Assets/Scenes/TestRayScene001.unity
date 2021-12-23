@@ -161,7 +161,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -170,7 +171,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 1f9c034be43adf9469a8387a65245b77, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: 1f9c034be43adf9469a8387a65245b77,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -226,7 +228,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -235,7 +238,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: cd3137c771342014fb2fb2aa5df82eae, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: cd3137c771342014fb2fb2aa5df82eae,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -291,7 +295,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -300,7 +305,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 47b8c27df3e327042b527ebd59315d10, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: 47b8c27df3e327042b527ebd59315d10,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -356,7 +362,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -365,7 +372,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: be96a007cf9e96c45b6253790e930cfe, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: be96a007cf9e96c45b6253790e930cfe,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -637,7 +645,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -646,7 +655,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: fddb7cd086f75b04bb5c7ac5384c1b7a, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: fddb7cd086f75b04bb5c7ac5384c1b7a,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -702,7 +712,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -711,7 +722,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 8547a313fe3a5e24a904adb2fd2575f7, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: 8547a313fe3a5e24a904adb2fd2575f7,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -767,7 +779,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -776,7 +789,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: 42c48c546d47fff448f04421a2873fe5, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: 42c48c546d47fff448f04421a2873fe5,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
@@ -927,7 +941,8 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition,
+        asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Custom Pass
         enabled: 1
@@ -936,7 +951,8 @@ MonoBehaviour:
         clearFlags: 0
         passFoldout: 0
         m_Version: 0
-        fullscreenPassMaterial: {fileID: 2100000, guid: e8a123f50ab6cd447a72b99177f3ffc1, type: 2}
+        fullscreenPassMaterial: {fileID: 2100000, guid: e8a123f50ab6cd447a72b99177f3ffc1,
+          type: 2}
         materialPassIndex: 0
         materialPassName: Custom Pass 0
         fetchColorBuffer: 0
