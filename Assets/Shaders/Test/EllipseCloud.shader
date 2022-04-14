@@ -92,6 +92,8 @@ Shader "FullScreen/EllipseCloud"
         if (_CustomPassInjectionPoint != CUSTOMPASSINJECTIONPOINT_BEFORE_RENDERING)
             color = float4(CustomPassLoadCameraColor(varyings.positionCS.xy, 0), 1);
 
+        float4 originColor = color;
+
         // Add your custom pass code here
         float3 rayOrigin = _WorldSpaceCameraPos;
         float3 rayDir = normalize(posInput.positionWS);
@@ -109,27 +111,26 @@ Shader "FullScreen/EllipseCloud"
         for (int i = 0; i < sampleCount; i++)
         {
             float dens = EllipseCloudDens(rayOrigin, float3(4, 2, 2));
+            int densValue = (dens > 0.0) ? 1 : 0;
 
-            if (dens > 0.0)
-            {
-                transmittance *= (1.0 - ((dens / float(sampleCount)) * absorption));
-                if (transmittance <= 0.01)
-                {
-                    break;
-                }
+            transmittance = (dens > 0.0) ? transmittance * (1.0 - ((dens / float(sampleCount)) * absorption)) : transmittance;
+            int transmittanceValue = (transmittance <= 0.01) ? 0 : 1;
 
-                float opaity = 20.0;
-                float k = opaity * (dens / float(sampleCount)) * transmittance;
-                float4 color1 = (1.0).xxxx * k;
+            float opaity = 20.0;
+            float k = opaity * (dens / float(sampleCount)) * transmittance;
+            float4 color1 = (1.0).xxxx * k;
 
-                color += color1;
-            }
-
+            color += (color1 * transmittanceValue * densValue);
             rayOrigin += rayDir * zStep;
         }
 
         // Fade value allow you to increase the strength of the effect while the camera gets closer to the custom pass volume
         float f = 1 - abs(_FadeValue * 2 - 1);
+        float4 rayWS = mul(UNITY_MATRIX_I_VP, float4(0, 0, 0, -_WorldSpaceCameraPos.z));
+        float3 rayZPos = ComputeNormalizedDeviceCoordinatesWithZ(rayWS.xyz, UNITY_MATRIX_VP);
+        float rayZBuf = rayZPos.z;
+
+        color = (rayZBuf) < (posInput.deviceDepth) ? originColor : color;
         return float4(color.rgb + f, color.a);
     }
 
